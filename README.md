@@ -13,6 +13,7 @@ An enterprise-grade Windows script editor, standalone binary compiler, and multi
 * **Concurrent Subnet Deployment:** Multi-threaded orchestrator pushes binaries to remote administrative shares (`C$\Windows\Temp`), triggers silent non-interactive execution, and cleans up artifacts automatically.
 * **Native Desktop GUI:** Runs as a standalone Windows desktop console powered by Microsoft Edge WebView2 (`pywebview`).
 
+
 ---
 
 ## 🚀 Getting Started
@@ -25,7 +26,7 @@ An enterprise-grade Windows script editor, standalone binary compiler, and multi
 
 ### 2. Environment Setup
 
-```powershell
+powershell
 # Clone the repository
 git clone [https://github.com/YOUR_USERNAME/windows-script-studio-and-deployer.git](https://github.com/YOUR_USERNAME/windows-script-studio-and-deployer.git)
 cd windows-script-studio-and-deployer
@@ -36,22 +37,20 @@ python -m pip install fastapi uvicorn pywebview pyinstaller
 
 PowerShell
 Install-Module -Name ps2exe -Scope CurrentUser -Force
----
-### 3. Launching the Studio
+# 3. Launching the Studio
 PowerShell
 python studio.py
---
-### 4. Compiling into a Standalone Desktop Executable
+# 4. Compiling into a Standalone Desktop Executable
 PowerShell
 python -m PyInstaller --onefile --noconsole --name "WinScriptStudio" studio.py
 The compiled standalone tool will be generated in the dist\ directory.
 
-🛡️ Execution & Audit Notes
+# 🛡️ Execution & Audit Notes
 Remote actions execute in Session 0 (non-interactive system context) to ensure end-user workflows are not interrupted.
 
 All remote sessions, authentications, and script block activities remain fully visible in standard Windows Event Logs (Security Event ID 4624/4672 and PowerShell/Operational Event ID 4104).
 
-📄 License
+# 📄 License
 MIT License. See LICENSE for details.
 
 
