@@ -15,32 +15,6 @@ An enterprise-grade Windows script editor, standalone binary compiler, and multi
 
 ---
 
-## 🏛️ Architecture
-
-┌─────────────────────────────────────────────────────────────┐
-│                      WinScript Studio                       │
-│    (Monaco Editor • Test Runner • Standalone Compiler)      │
-└──────────────────────────────┬──────────────────────────────┘
-│
-[ Subnet Probe (CIDR Range) ]
-│
-┌──────────────────┴──────────────────┐
-▼                                     ▼
-[ Windows PC Hosts ]                  [ Non-PC Devices ]
-(WinRM / SMB Confirmed)             (Printers, TVs, IoT)
-│                                     │
-
-Mount Admin Share (C$)               [ Skipped / Dropped ]
-
-Stage Binary Artifact
-
-Invoke-Command Silent Exec
-
-Purge Staged Temp File
-
-
----
-
 ## 🚀 Getting Started
 
 ### 1. Prerequisites
