@@ -36,10 +36,12 @@ python -m pip install fastapi uvicorn pywebview pyinstaller
 
 PowerShell
 Install-Module -Name ps2exe -Scope CurrentUser -Force
-3. Launching the Studio
+---
+### 3. Launching the Studio
 PowerShell
 python studio.py
-4. Compiling into a Standalone Desktop Executable
+--
+### 4. Compiling into a Standalone Desktop Executable
 PowerShell
 python -m PyInstaller --onefile --noconsole --name "WinScriptStudio" studio.py
 The compiled standalone tool will be generated in the dist\ directory.
