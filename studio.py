@@ -139,7 +139,7 @@ async def compile_script(payload: dict):
 @app.post("/api/deploy")
 async def deploy_fleet(payload: dict):
     binary_path = payload.get("binary_path")
-    subnet = payload.get("subnet")
+    target_input = payload.get("subnet", "").strip()
     user = payload.get("domain_user")
     password = payload.get("domain_password")
 
@@ -148,16 +148,21 @@ async def deploy_fleet(payload: dict):
 
     results = []
     try:
-        net = ipaddress.ip_network(subnet, strict=False)
+        # Handles single IP (e.g. 192.168.1.50) OR CIDR (e.g. 192.168.1.0/24)
+        if "/" in target_input:
+            targets = list(ipaddress.ip_network(target_input, strict=False).hosts())
+        else:
+            targets = [ipaddress.ip_address(target_input)]
+
         with ThreadPoolExecutor(max_workers=10) as executor:
             futures = [
                 executor.submit(deploy_to_single_pc, str(host), binary_path, user, password)
-                for host in net.hosts()
+                for host in targets
             ]
             for f in futures:
                 results.append(f.result())
     except Exception as e:
-        return JSONResponse({"status": "ERROR", "message": str(e)}, status_code=500)
+        return JSONResponse({"status": "ERROR", "message": f"Target parsing error: {str(e)}"}, status_code=400)
 
     return {"status": "COMPLETED", "results": results}
 
@@ -203,18 +208,18 @@ async def serve_studio():
 
             <div class="w-5/12 flex flex-col bg-gray-900">
                 <div class="p-4 border-b border-gray-800 bg-gray-850">
-                    <h2 class="text-xs uppercase font-bold text-gray-400 mb-3 tracking-wider">Fleet Subnet Orchestrator</h2>
+                    <h2 class="text-xs uppercase font-bold text-gray-400 mb-3 tracking-wider">Fleet Orchestrator</h2>
                     <div class="grid grid-cols-2 gap-2 text-xs">
                         <div>
-                            <label class="block text-gray-400 mb-1">Target Subnet</label>
-                            <input id="targetSubnet" type="text" value="192.168.1.0/24" class="w-full bg-gray-800 border border-gray-700 p-1.5 rounded focus:border-blue-500 outline-none">
+                            <label class="block text-gray-400 mb-1">Target IP / CIDR Subnet</label>
+                            <input id="targetSubnet" type="text" placeholder="192.168.1.50 or 192.168.1.0/24" value="192.168.1.0/24" class="w-full bg-gray-800 border border-gray-700 p-1.5 rounded focus:border-blue-500 outline-none">
                         </div>
                         <div>
-                            <label class="block text-gray-400 mb-1">Domain User</label>
-                            <input id="domainUser" type="text" placeholder="DOMAIN\\Admin" class="w-full bg-gray-800 border border-gray-700 p-1.5 rounded focus:border-blue-500 outline-none">
+                            <label class="block text-gray-400 mb-1">Admin Username</label>
+                            <input id="domainUser" type="text" placeholder="DOMAIN\\Admin or .\\Admin" class="w-full bg-gray-800 border border-gray-700 p-1.5 rounded focus:border-blue-500 outline-none">
                         </div>
                         <div class="col-span-2">
-                            <label class="block text-gray-400 mb-1">Domain Password</label>
+                            <label class="block text-gray-400 mb-1">Admin Password</label>
                             <input id="domainPass" type="password" placeholder="••••••••••••" class="w-full bg-gray-800 border border-gray-700 p-1.5 rounded focus:border-blue-500 outline-none">
                         </div>
                     </div>
@@ -222,7 +227,7 @@ async def serve_studio():
                     <div class="mt-3 flex items-center justify-between">
                         <span id="binaryStatus" class="text-xs text-gray-400 italic">No binary compiled yet.</span>
                         <button id="deployBtn" onclick="deployFleet()" disabled class="bg-blue-600 disabled:opacity-40 hover:bg-blue-500 text-xs font-semibold px-4 py-1.5 rounded transition">
-                            🚀 Push to Domain Subnet
+                            🚀 Push to Target
                         </button>
                     </div>
                 </div>
@@ -309,7 +314,7 @@ async def serve_studio():
 
             async function deployFleet() {
                 const log = document.getElementById("outputLog");
-                log.innerText += "\\n[*] Initiating subnet scan & deployment...\\n";
+                log.innerText += "\\n[*] Initiating target scan & deployment...\\n";
                 const res = await fetch("/api/deploy", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
@@ -338,11 +343,9 @@ def start_backend():
     uvicorn.run(app, host="127.0.0.1", port=9000, log_level="warning")
 
 if __name__ == "__main__":
-    # Start backend server in a background thread
     server_thread = threading.Thread(target=start_backend, daemon=True)
     server_thread.start()
 
-    # Launch native desktop window (Edge WebView2)
     webview.create_window(
         title="WinScript Studio - Desktop Orchestration Console",
         url="http://127.0.0.1:9000",
